@@ -1,0 +1,25 @@
+# --- Environments ---
+.venv/
+env/
+venv/
+ENV/
+
+# --- Secrets and Config ---
+.env
+*.local
+secrets.yaml
+
+# --- Python Artifacts ---
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.mypy_cache/
+
+# --- OS Specific ---
+.DS_Store
+Thumbs.db
+
+# --- Project Specific ---
+data/raw/           # If you have large datasets you don't want on GitHub
+outputs/            # If your RAG pipeline generates heavy log/result files
