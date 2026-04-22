@@ -22,4 +22,5 @@ Thumbs.db
 
 # --- Project Specific ---
 data/raw/           # If you have large datasets you don't want on GitHub
+evals/
 outputs/            # If your RAG pipeline generates heavy log/result files

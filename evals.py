@@ -20,8 +20,7 @@ client = OpenAI(
     base_url=os.environ["LLM_BASE_URL"]
 )
 rag_client = default_rag_client(llm_client=client, model_name=os.environ["LLM_MODEL"], logdir="evals/logs")
-llm = llm_factory(os.environ["LLM_MODEL"], client=client)
-
+llm = llm_factory(os.environ["EVAL_MODEL"], client=client)
 
 def load_dataset():
     dataset = Dataset(
