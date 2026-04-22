@@ -3,6 +3,9 @@ import os
 from dataclasses import asdict, dataclass
 from datetime import datetime
 from typing import Any, Dict, List, Optional
+from dotenv import load_dotenv
+
+load_dotenv()
 
 from openai import OpenAI
 
@@ -83,6 +86,7 @@ class ExampleRAG:
     def __init__(
         self,
         llm_client,
+        model_name,
         retriever: Optional[BaseRetriever] = None,
         system_prompt: Optional[str] = None,
         logdir: str = "logs",
@@ -97,6 +101,7 @@ class ExampleRAG:
             logdir: Directory for trace log files
         """
         self.llm_client = llm_client
+        self.model_name = model_name
         self.retriever = retriever or SimpleKeywordRetriever()
         self.system_prompt = (
             system_prompt
@@ -289,7 +294,7 @@ class ExampleRAG:
                 component="openai_api",
                 data={
                     "operation": "generate_response",
-                    "model": "gpt-4o",
+                    "model": self.model_name,
                     "query": query,
                     "prompt_length": len(prompt),
                     "context_length": len(context),
@@ -300,7 +305,7 @@ class ExampleRAG:
 
         try:
             response = self.llm_client.chat.completions.create(
-                model="gpt-4o",
+                model=self.model_name,
                 messages=[
                     {"role": "system", "content": self.system_prompt},
                     {"role": "user", "content": prompt},
@@ -319,7 +324,7 @@ class ExampleRAG:
                         "usage": (
                             response.usage.model_dump() if response.usage else None
                         ),
-                        "model": "gpt-4o",
+                        "model": self.model_name,
                     },
                 )
             )
@@ -439,7 +444,7 @@ class ExampleRAG:
         return log_filepath
 
 
-def default_rag_client(llm_client, logdir: str = "logs") -> ExampleRAG:
+def default_rag_client(llm_client, model_name: str, logdir: str = "logs") -> ExampleRAG:
     """
     Create a default RAG client with OpenAI LLM and optional retriever.
 
@@ -450,24 +455,33 @@ def default_rag_client(llm_client, logdir: str = "logs") -> ExampleRAG:
         ExampleRAG instance
     """
     retriever = SimpleKeywordRetriever()
-    client = ExampleRAG(llm_client=llm_client, retriever=retriever, logdir=logdir)
+    client = ExampleRAG(llm_client=llm_client, model_name=model_name, retriever=retriever, logdir=logdir)
     client.add_documents(DOCUMENTS)  # Add default documents
     return client
 
 
 if __name__ == "__main__":
+
     try:
-        api_key = os.environ["OPENAI_API_KEY"]
+        api_key = os.environ["LLM_API_KEY"]
     except KeyError:
-        print("Error: OPENAI_API_KEY environment variable is not set.")
+        print("Error: LLM_API_KEY environment variable is not set.")
         print("Please set your OpenAI API key:")
-        print("export OPENAI_API_KEY='your_openai_api_key'")
+        print("export LLM_API_KEY='LLM_API_KEY'")
         exit(1)
 
     # Initialize RAG system with tracing enabled
-    llm = OpenAI(api_key=api_key)
+    client = OpenAI(
+        api_key=os.environ["LLM_API_KEY"],
+        base_url=os.environ["LLM_BASE_URL"]
+    )
     r = SimpleKeywordRetriever()
-    rag_client = ExampleRAG(llm_client=llm, retriever=r, logdir="logs")
+    rag_client = ExampleRAG(
+        llm_client=client,
+        model_name=os.environ["LLM_MODEL"],
+        retriever=r,
+        logdir="logs"
+    )
 
     # Add documents (this will be traced)
     rag_client.add_documents(DOCUMENTS)

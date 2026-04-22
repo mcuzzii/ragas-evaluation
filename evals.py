@@ -7,14 +7,20 @@ from openai import OpenAI
 from ragas import Dataset, experiment
 from ragas.llms import llm_factory
 from ragas.metrics import DiscreteMetric
+from dotenv import load_dotenv
+
+load_dotenv()
 
 # Add the current directory to the path so we can import rag module when run as a script
 sys.path.insert(0, str(Path(__file__).parent))
 from rag import default_rag_client
 
-openai_client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
-rag_client = default_rag_client(llm_client=openai_client, logdir="evals/logs")
-llm = llm_factory("gpt-4o", client=openai_client)
+client = OpenAI(
+    api_key=os.environ["LLM_API_KEY"],
+    base_url=os.environ["LLM_BASE_URL"]
+)
+rag_client = default_rag_client(llm_client=client, model_name=os.environ["LLM_MODEL"], logdir="evals/logs")
+llm = llm_factory(os.environ["LLM_MODEL"], client=client)
 
 
 def load_dataset():
@@ -75,6 +81,7 @@ async def run_experiment(row):
 
 
 async def main():
+
     dataset = load_dataset()
     print("dataset loaded successfully", dataset)
     experiment_results = await run_experiment.arun(dataset)
